@@ -31,7 +31,7 @@ planned for v2 and v3. See `PRODUCT_SPEC.md` for the full roadmap.
 
 ```bash
 npm install
-cp examples/agentiam.config.yaml ./agentiam.config.yaml
+npx agentiam init   # scaffolds ./agentiam.config.yaml (refuses to overwrite an existing one)
 # edit agentiam.config.yaml for your app
 export MYAPP_ADMIN_PASSWORD="..."   # matches secretEnvVar in your config
 npm run dev
@@ -60,6 +60,22 @@ sessions and force AgentIAm to generate a new key.
 > **Upgrading from an older AgentIAm version?** The session cache schema
 > changed to support encryption. Delete `~/.agentiam/agentiam.db` after
 > upgrading — there's no in-place migration for the old plaintext format.
+
+## Known limitations
+
+- **Concurrent `get_session` calls for the same app+role aren't de-duplicated.**
+  If two calls race while nothing is cached yet, both may independently log in
+  before either writes to the cache. This is wasteful (an extra login against
+  your target app) but not unsafe — the last write wins and the cache ends up
+  consistent either way. Not expected to matter for the typical usage pattern
+  (one agent, one MCP client, calls made one at a time).
+
+- **Graceful shutdown (SIGINT/SIGTERM) is not fully reliable on Windows** when
+  AgentIAm is launched and terminated programmatically as a child process
+  (the normal way an MCP client runs it) — a Node.js/Windows platform
+  limitation, not specific to AgentIAm. Interactive Ctrl+C works reliably on
+  all platforms. An unclean exit is still safe (no data loss — SQLite runs in
+  WAL mode), just not graceful.
 
 ## Development
 

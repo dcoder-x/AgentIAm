@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { getOrRefreshSession } from "../auth/sessionProvider.js";
+import { ConfigError } from "../config/loader.js";
+import { AgentIAmError } from "../errors.js";
 import type { ValidatedConfig } from "../config/schema.js";
 
 export const getSessionInputSchema = z.object({
@@ -25,25 +27,50 @@ export const getSessionToolDefinition = {
 
 export async function handleGetSession(config: ValidatedConfig, args: unknown) {
   const { app, role } = getSessionInputSchema.parse(args);
-  const session = await getOrRefreshSession(config, app, role);
 
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(
-          {
-            app: session.app,
-            role: session.role,
-            token: session.token,
-            headerName: session.headerName,
-            expiresAt: new Date(session.expiresAt).toISOString(),
-            cached: session.cached,
-          },
-          null,
-          2
-        ),
-      },
-    ],
-  };
+  try {
+    const session = await getOrRefreshSession(config, app, role);
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              app: session.app,
+              role: session.role,
+              token: session.token,
+              headerName: session.headerName,
+              expiresAt: new Date(session.expiresAt).toISOString(),
+              cached: session.cached,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  } catch (err) {
+    const { code, message } = classifyError(err);
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({ error: code, message }, null, 2),
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+function classifyError(err: unknown): { code: string; message: string } {
+  if (err instanceof ConfigError) {
+    return { code: "config_error", message: err.message };
+  }
+  if (err instanceof AgentIAmError) {
+    const code = err.kind === "config" ? "config_error" : "target_app_error";
+    return { code, message: err.message };
+  }
+  return { code: "internal_error", message: err instanceof Error ? err.message : String(err) };
 }

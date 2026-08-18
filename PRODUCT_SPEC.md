@@ -32,10 +32,14 @@ These boundaries are stated up front in the README, and enforced technically whe
 
 ### v2 — Account Creation
 - Agent inspects the codebase (routes, DTOs/schemas, validation rules) to infer the signup flow and construct a valid request, rather than requiring manual config
+- Fake user data (name, email local-part, address, birthdate, etc.) generated via `@faker-js/faker` — the actively maintained fork, not the original `faker.js` (sabotaged and pulled from npm in 2022). Seeded deterministically per test run (`faker.seed(n)`) so a failing test's generated data is reproducible, not different on every run. Locale-aware, since apps with non-US user bases (e.g. Nigerian phone/address formats) would otherwise fail validation on data-shape grounds unrelated to a real bug.
 - Retry loop: agent uses server-returned validation errors to correct fields it got wrong
 - Disposable, project-scoped email inbox (e.g. `run-<id>@project.agentiam.dev`) — agent calls `read_inbox()` to retrieve confirmation links or OTP codes
 - SMS: bring-your-own-provider. AgentIAm manages inbox-reading logic; the user supplies their own Twilio/SNS-style credentials — not hosting phone numbers centrally
-- OAuth: only works against a mock/test identity provider already present in the target codebase. Explicit no-op against real providers — a hard boundary, not a best-effort feature
+- **OAuth: AgentIAm ships its own mock OAuth/OIDC provider.** Rather than requiring the target app to already have a mock IdP, AgentIAm runs a local server implementing the standard OAuth2/OIDC endpoints (`/authorize`, `/token`, `/userinfo`, `/.well-known/openid-configuration`) and returns realistic, Google/Facebook-shaped claims (email, sub, name, picture) — following the same proven pattern as tools like `mock-oauth2-server`. Nothing calls the real Google/Facebook APIs; the whole exchange happens between the agent and AgentIAm.
+  - **Requires the app's OAuth client config to be pointed at AgentIAm's mock endpoints for the test/staging environment** — an environment-variable or config override, not a code change, but apps that hardcode `accounts.google.com` directly won't work without the developer adjusting that first. Document this as a real compatibility requirement, not an edge case.
+  - **Tests flow shape, not provider reality.** Proves the app correctly handles a successful/failed OAuth callback, parses claims, and creates a session. Does *not* prove the integration works against real Google/Facebook (consent-screen edge cases, scope quirks, real JWKS verification). State this distinction explicitly in docs so passing AgentIAm OAuth tests is never mistaken for "login definitely works in prod."
+  - **Simulate the protocol, not the brand.** The mock consent screen is clearly labeled as AgentIAm's own — no recreation of Google/Facebook's actual logos or consent UI. Protocol simulation is standard test infra; visual cloning of a real provider's branded screens is a trademark/phishing-adjacent problem even with good intent.
 
 ### v3 — Lifecycle Management & Cleanup
 - Automatic teardown of created test accounts and associated data after a test run
@@ -57,6 +61,7 @@ These boundaries are stated up front in the README, and enforced technically whe
 - **Config validation:** `zod`, parsing YAML (`js-yaml`) — fails loudly with specific errors on a malformed config rather than surfacing as a confusing runtime failure
 - **Storage:** SQLite via `better-sqlite3`, stored at `~/.agentiam/agentiam.db` (outside the project repo, so cached tokens are never accidentally committed) — no external database dependency for a self-hosted, single-developer-or-small-team tool
 - **Testing:** Vitest
+- **Fake data generation (v2):** `@faker-js/faker`, seeded deterministically per run
 - **Distribution:** npm package, run via `npx agentiam`
 
 ## Folder Structure

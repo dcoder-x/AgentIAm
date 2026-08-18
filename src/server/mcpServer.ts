@@ -47,8 +47,9 @@ export function buildServer(config: ValidatedConfig): Server {
   return server;
 }
 
-export async function startServer(config: ValidatedConfig): Promise<void> {
+export async function startServer(config: ValidatedConfig): Promise<Server> {
   const server = buildServer(config);
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  return server;
 }
