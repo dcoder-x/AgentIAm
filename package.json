@@ -27,6 +27,15 @@
     "agents"
   ],
   "license": "AGPL-3.0-only",
+  "author": "dcoder-x",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcoder-x/AgentIAm.git"
+  },
+  "homepage": "https://github.com/dcoder-x/AgentIAm#readme",
+  "bugs": {
+    "url": "https://github.com/dcoder-x/AgentIAm/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.0.0",
