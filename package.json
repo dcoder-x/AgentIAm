@@ -1,5 +1,5 @@
 {
-  "name": "agentiam",
+  "name": "agentiam-mcp",
   "version": "0.1.0",
   "description": "Agent Identity MCP server for testing your own product's authenticated flows",
   "type": "module",

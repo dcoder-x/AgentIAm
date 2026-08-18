@@ -30,11 +30,14 @@ planned for v2 and v3. See `PRODUCT_SPEC.md` for the full roadmap.
 ## Quickstart
 
 ```bash
-npx agentiam init   # scaffolds ./agentiam.config.yaml (refuses to overwrite an existing one)
+npx agentiam-mcp init   # scaffolds ./agentiam.config.yaml (refuses to overwrite an existing one)
 # edit agentiam.config.yaml for your app
 export MYAPP_ADMIN_PASSWORD="..."   # matches secretEnvVar in your config
-npx agentiam
+npx agentiam-mcp
 ```
+
+(The npm package is published as `agentiam-mcp` — `agentiam` was too close to an
+existing unrelated package name. The tool itself is still called AgentIAm.)
 
 Secrets can also be set in a `.env` file in your project root (gitignore it) —
 AgentIAm loads it automatically on startup.

@@ -62,7 +62,7 @@ These boundaries are stated up front in the README, and enforced technically whe
 - **Storage:** SQLite via `better-sqlite3`, stored at `~/.agentiam/agentiam.db` (outside the project repo, so cached tokens are never accidentally committed) — no external database dependency for a self-hosted, single-developer-or-small-team tool
 - **Testing:** Vitest
 - **Fake data generation (v2):** `@faker-js/faker`, seeded deterministically per run
-- **Distribution:** npm package, run via `npx agentiam`
+- **Distribution:** npm package, run via `npx agentiam-mcp` (published as `agentiam-mcp` — `agentiam` collided with an unrelated existing package name on the registry)
 
 ## Folder Structure
 
